@@ -1,22 +1,25 @@
 import { getAdminPrograms } from "@/lib/programs";
+import { AdminNav } from "@/components/AdminNav";
 import { updateProgramStatus } from "./actions";
 
 export default async function AdminProgramsPage() {
   const programs = await getAdminPrograms();
 
   return (
-    <main className="page">
-      <div className="toolbar">
-        <div>
-          <h1>프로그램 검수</h1>
-          <p className="meta">자동 수집된 후보를 확인하고 게시 상태를 관리합니다.</p>
+    <>
+      <AdminNav />
+      <main className="page">
+        <div className="toolbar">
+          <div>
+            <h1>프로그램 검수</h1>
+            <p className="meta">자동 수집된 후보를 확인하고 게시 상태를 관리합니다.</p>
+          </div>
+          <a className="button secondary" href="/admin/sites">
+            기관 설정
+          </a>
         </div>
-        <a className="button secondary" href="/admin/sites">
-          기관 설정
-        </a>
-      </div>
 
-      <section className="panel">
+        <section className="panel">
         <table className="table">
           <thead>
             <tr>
@@ -57,7 +60,8 @@ export default async function AdminProgramsPage() {
           </tbody>
         </table>
         {programs.length === 0 ? <div className="empty">수집된 프로그램 후보가 없습니다.</div> : null}
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }

@@ -1,22 +1,25 @@
 import { getSites } from "@/lib/programs";
+import { AdminNav } from "@/components/AdminNav";
 import { createSite, scrapeSiteNow } from "./actions";
 
 export default async function AdminSitesPage() {
   const sites = await getSites();
 
   return (
-    <main className="page">
-      <div className="toolbar">
-        <div>
-          <h1>기관 설정</h1>
-          <p className="meta">자동 수집 대상 사이트와 게시판 선택자를 관리합니다.</p>
+    <>
+      <AdminNav />
+      <main className="page">
+        <div className="toolbar">
+          <div>
+            <h1>기관 설정</h1>
+            <p className="meta">자동 수집 대상 사이트와 게시판 선택자를 관리합니다.</p>
+          </div>
+          <a className="button secondary" href="/admin/programs">
+            프로그램 검수
+          </a>
         </div>
-        <a className="button secondary" href="/admin/programs">
-          프로그램 검수
-        </a>
-      </div>
 
-      <section className="panel form-panel">
+        <section className="panel form-panel">
         <h2>기관 추가</h2>
         <form action={createSite} className="site-form">
           <label>
@@ -57,9 +60,9 @@ export default async function AdminSitesPage() {
           </label>
           <button type="submit">추가</button>
         </form>
-      </section>
+        </section>
 
-      <section className="panel">
+        <section className="panel">
         <table className="table">
           <thead>
             <tr>
@@ -92,7 +95,8 @@ export default async function AdminSitesPage() {
           </tbody>
         </table>
         {sites.length === 0 ? <div className="empty">등록된 기관이 없습니다.</div> : null}
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }
