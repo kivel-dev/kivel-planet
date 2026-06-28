@@ -45,6 +45,7 @@ export async function runScrapeForSite(siteId: string) {
           site_id: site.id,
           title: program.title,
           source_url: program.sourceUrl,
+          image_url: program.imageUrl,
           region: site.region,
           center_type: site.center_type,
           last_seen_at: new Date().toISOString()

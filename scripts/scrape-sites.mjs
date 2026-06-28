@@ -18,6 +18,7 @@ function parseEnv(content) {
 async function main() {
   const fs = await import("node:fs/promises");
   const env = parseEnv(await fs.readFile(".env.local", "utf8"));
+  const appUrl = process.env.KIVEL_APP_URL ?? "http://localhost:3000";
   const limit = Number.parseInt(process.argv[2] ?? "", 10);
   const supabase = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const { data: sites, error } = await supabase
@@ -39,7 +40,7 @@ async function main() {
 
   for (const site of targetSites) {
     try {
-      const response = await fetch(`http://localhost:3001/api/scrape/${site.id}`, {
+      const response = await fetch(`${appUrl}/api/scrape/${site.id}`, {
         method: "POST",
         headers: env.SCRAPER_SECRET ? { "x-scraper-secret": env.SCRAPER_SECRET } : {}
       });

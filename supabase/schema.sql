@@ -24,6 +24,7 @@ create table public.programs (
   site_id uuid not null references public.sites(id) on delete cascade,
   title text not null,
   source_url text not null,
+  image_url text,
   status public.program_status not null default 'candidate',
   region text not null default '',
   center_type text not null default '',
@@ -51,6 +52,8 @@ create table public.scrape_runs (
 create index programs_status_idx on public.programs(status);
 create index programs_region_idx on public.programs(region);
 create index programs_site_id_idx on public.programs(site_id);
+create index programs_image_url_idx on public.programs(image_url)
+where image_url is not null;
 create index sites_active_idx on public.sites(is_active);
 
 create or replace function public.set_updated_at()

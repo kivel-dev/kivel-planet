@@ -21,6 +21,7 @@ export type Program = {
   site_id: string;
   title: string;
   source_url: string;
+  image_url: string | null;
   status: ProgramStatus;
   region: string;
   center_type: string;

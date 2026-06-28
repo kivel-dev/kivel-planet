@@ -132,6 +132,14 @@ button.secondary,
   padding: 18px;
 }
 
+.program-image {
+  aspect-ratio: 16 / 9;
+  background: var(--surface-muted);
+  border-radius: 6px;
+  object-fit: cover;
+  width: 100%;
+}
+
 .card h3 {
   font-size: 17px;
   line-height: 1.45;
@@ -173,6 +181,14 @@ button.secondary,
 .table th {
   color: var(--muted);
   font-size: 13px;
+}
+
+.table-image {
+  aspect-ratio: 4 / 3;
+  background: var(--surface-muted);
+  border-radius: 4px;
+  object-fit: cover;
+  width: 72px;
 }
 
 .empty {

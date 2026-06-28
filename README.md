@@ -51,6 +51,12 @@ npm run scrape:sites
 npm run scrape:sites -- 10
 ```
 
+기본 앱 주소는 `http://localhost:3000`입니다. 다른 포트에서 실행 중이면 `KIVEL_APP_URL`을 지정합니다.
+
+```bash
+KIVEL_APP_URL=http://localhost:3001 npm run scrape:sites -- 10
+```
+
 ## 주요 경로
 
 - `/`: 공개 홈

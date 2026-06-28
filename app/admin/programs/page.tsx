@@ -26,6 +26,7 @@ export default async function AdminProgramsPage() {
           <thead>
             <tr>
               <th>상태</th>
+              <th>이미지</th>
               <th>기관</th>
               <th>제목</th>
               <th>지역</th>
@@ -36,6 +37,13 @@ export default async function AdminProgramsPage() {
             {programs.map((program) => (
               <tr key={program.id}>
                 <td><span className="badge">{program.status}</span></td>
+                <td>
+                  {program.image_url ? (
+                    <img className="table-image" src={program.image_url} alt="" loading="lazy" />
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td>{program.sites?.name ?? "-"}</td>
                 <td>
                   <a href={program.source_url} target="_blank" rel="noreferrer">
