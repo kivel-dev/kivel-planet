@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "import:sites": "node scripts/import-sites-from-google-sheet.mjs",
+    "analyze:failures": "node scripts/analyze-failed-sites.mjs",
     "scrape:sites": "node scripts/scrape-sites.mjs",
+    "scrape:failed": "node scripts/rescrape-failed-sites.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"

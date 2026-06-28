@@ -51,9 +51,8 @@ export async function getLatestFailedScrapeRuns() {
   const { data, error } = await supabase
     .from("scrape_runs")
     .select("*, sites(*)")
-    .eq("status", "failed")
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(500);
 
   if (error) {
     throw error;
@@ -69,5 +68,5 @@ export async function getLatestFailedScrapeRuns() {
     latestBySite.set(run.site_id, run);
   }
 
-  return Array.from(latestBySite.values());
+  return Array.from(latestBySite.values()).filter((run) => run.status === "failed");
 }

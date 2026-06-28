@@ -1,10 +1,19 @@
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import * as cheerio from "cheerio";
 import type { Site } from "@/types/database";
+
+const execFileAsync = promisify(execFile);
 
 export type ScrapedProgram = {
   title: string;
   sourceUrl: string;
   imageUrl: string | null;
+};
+
+type HtmlResponse = {
+  html: string;
+  baseUrl: string;
 };
 
 function splitSelector(selector: string) {
@@ -25,6 +34,88 @@ function shouldExclude(title: string, keywords: string[]) {
 
 function normalizeUrl(baseUrl: string, href: string) {
   return new URL(href.replace("¤t", "&current"), baseUrl).toString();
+}
+
+async function fetchWithCurl(url: string): Promise<HtmlResponse | null> {
+  try {
+    const { stdout } = await execFileAsync(
+      "curl",
+      [
+        "-k",
+        "-L",
+        "--max-time",
+        "20",
+        "--connect-timeout",
+        "8",
+        "-A",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 KivelPlanet/0.1",
+        "-H",
+        "Accept: text/html,application/xhtml+xml",
+        "-w",
+        "\\n__KIVEL_STATUS__%{http_code}\\n__KIVEL_EFFECTIVE_URL__%{url_effective}",
+        url
+      ],
+      {
+        maxBuffer: 8 * 1024 * 1024,
+        timeout: 25000
+      }
+    );
+    const statusMarker = "\n__KIVEL_STATUS__";
+    const urlMarker = "\n__KIVEL_EFFECTIVE_URL__";
+    const statusIndex = stdout.lastIndexOf(statusMarker);
+    const urlIndex = stdout.lastIndexOf(urlMarker);
+
+    if (statusIndex === -1 || urlIndex === -1) {
+      return { html: stdout, baseUrl: url };
+    }
+
+    const status = stdout.slice(statusIndex + statusMarker.length, urlIndex).trim();
+    if (!status.startsWith("2")) {
+      return null;
+    }
+
+    return {
+      html: stdout.slice(0, statusIndex),
+      baseUrl: stdout.slice(urlIndex + urlMarker.length).trim() || url
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function fetchHtml(url: string): Promise<HtmlResponse> {
+  try {
+    const response = await fetch(url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        "user-agent": "Mozilla/5.0 KivelPlanet/0.1",
+        accept: "text/html,application/xhtml+xml"
+      }
+    });
+
+    if (response.ok) {
+      return { html: await response.text(), baseUrl: response.url || url };
+    }
+
+    const fallback = await fetchWithCurl(url);
+    if (fallback) {
+      return fallback;
+    }
+
+    throw new Error(`사이트 요청 실패: ${response.status}`);
+  } catch (error) {
+    const fallback = await fetchWithCurl(url);
+    if (fallback) {
+      return fallback;
+    }
+
+    if (error instanceof Error && error.message.startsWith("사이트 요청 실패")) {
+      throw error;
+    }
+
+    throw new Error("fetch failed");
+  }
 }
 
 function isLikelyDecorativeImage(url: string) {
@@ -92,20 +183,7 @@ function metaImageUrl($: cheerio.CheerioAPI, baseUrl: string) {
 
 async function fetchDetailImage(sourceUrl: string) {
   try {
-    const response = await fetch(sourceUrl, {
-      redirect: "follow",
-      signal: AbortSignal.timeout(10000),
-      headers: {
-        "user-agent": "Mozilla/5.0 KivelPlanet/0.1",
-        accept: "text/html,application/xhtml+xml"
-      }
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    const html = await response.text();
+    const { html, baseUrl } = await fetchHtml(sourceUrl);
     const $ = cheerio.load(html);
     const contentSelectors = [
       "#bo_v_con",
@@ -124,41 +202,32 @@ async function fetchDetailImage(sourceUrl: string) {
     for (const selector of contentSelectors) {
       const content = $(selector).first();
       if (content.length > 0) {
-        const imageUrl = firstImageUrl($, sourceUrl, content[0]);
+        const imageUrl = firstImageUrl($, baseUrl, content[0]);
         if (imageUrl) {
           return imageUrl;
         }
       }
     }
 
-    return metaImageUrl($, sourceUrl);
+    return metaImageUrl($, baseUrl);
   } catch {
     return null;
   }
 }
 
-export async function scrapeSite(site: Site): Promise<ScrapedProgram[]> {
-  const response = await fetch(site.homepage_url, {
-    redirect: "follow",
-    signal: AbortSignal.timeout(15000),
-    headers: {
-      "user-agent": "Mozilla/5.0 KivelPlanet/0.1",
-      accept: "text/html,application/xhtml+xml"
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`사이트 요청 실패: ${response.status}`);
-  }
-
-  const html = await response.text();
-  const $ = cheerio.load(html);
-  const depth1 = splitSelector(site.selector_depth1);
-  const depth2 = site.selector_depth2.trim() ? splitSelector(site.selector_depth2) : "";
+function extractPrograms(
+  $: cheerio.CheerioAPI,
+  baseUrl: string,
+  site: Site,
+  depth1: string,
+  depth2 = ""
+) {
+  const depth1Selector = splitSelector(depth1);
+  const depth2Selector = depth2.trim() ? splitSelector(depth2) : "";
   const programs: ScrapedProgram[] = [];
 
-  $(depth1).each((_, container) => {
-    const candidates = depth2 ? $(container).find(depth2).toArray() : [container];
+  $(depth1Selector).each((_, container) => {
+    const candidates = depth2Selector ? $(container).find(depth2Selector).toArray() : [container];
 
     candidates.forEach((candidate) => {
       const title = $(candidate).text().replace(/\s+/g, " ").trim();
@@ -173,15 +242,44 @@ export async function scrapeSite(site: Site): Promise<ScrapedProgram[]> {
       const href = $(linkPool[linkIndex]).attr("href");
 
       if (href) {
-        const sourceUrl = normalizeUrl(site.homepage_url, href);
+        const sourceUrl = normalizeUrl(baseUrl, href);
         programs.push({
           title,
           sourceUrl,
-          imageUrl: firstImageUrl($, site.homepage_url, candidate) ?? firstImageUrl($, site.homepage_url, container)
+          imageUrl: firstImageUrl($, baseUrl, candidate) ?? firstImageUrl($, baseUrl, container)
         });
       }
     });
   });
+
+  return programs;
+}
+
+export async function scrapeSite(site: Site): Promise<ScrapedProgram[]> {
+  const { html, baseUrl } = await fetchHtml(site.homepage_url);
+  const $ = cheerio.load(html);
+  let programs = extractPrograms($, baseUrl, site, site.selector_depth1, site.selector_depth2);
+
+  if (programs.length === 0) {
+    const fallbackSelectors = [
+      "td,td_subject",
+      "td,subject",
+      "td,title",
+      "div,bo_tit",
+      "div,title",
+      "div,wr-subject",
+      "li,bo_notice",
+      "li,post-item",
+      "tr"
+    ];
+
+    for (const selector of fallbackSelectors) {
+      programs = extractPrograms($, baseUrl, site, selector);
+      if (programs.length > 0) {
+        break;
+      }
+    }
+  }
 
   return Promise.all(
     programs.map(async (program) => ({
