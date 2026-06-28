@@ -2,6 +2,8 @@ import { getSites } from "@/lib/programs";
 import { AdminNav } from "@/components/AdminNav";
 import { createSite, scrapeSiteNow } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminSitesPage() {
   const sites = await getSites();
 
@@ -12,7 +14,7 @@ export default async function AdminSitesPage() {
         <div className="toolbar">
           <div>
             <h1>기관 설정</h1>
-            <p className="meta">자동 수집 대상 사이트와 게시판 선택자를 관리합니다.</p>
+            <p className="meta">자동 수집 대상 사이트 {sites.length.toLocaleString()}곳과 게시판 선택자를 관리합니다.</p>
           </div>
           <a className="button secondary" href="/admin/programs">
             프로그램 검수

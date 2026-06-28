@@ -2,6 +2,8 @@ import { getAdminPrograms } from "@/lib/programs";
 import { AdminNav } from "@/components/AdminNav";
 import { updateProgramStatus } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminProgramsPage() {
   const programs = await getAdminPrograms();
 
@@ -12,7 +14,7 @@ export default async function AdminProgramsPage() {
         <div className="toolbar">
           <div>
             <h1>프로그램 검수</h1>
-            <p className="meta">자동 수집된 후보를 확인하고 게시 상태를 관리합니다.</p>
+            <p className="meta">자동 수집된 후보 {programs.length.toLocaleString()}건을 확인하고 게시 상태를 관리합니다.</p>
           </div>
           <a className="button secondary" href="/admin/sites">
             기관 설정

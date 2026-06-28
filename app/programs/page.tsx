@@ -2,6 +2,8 @@ import { ProgramCard } from "@/components/ProgramCard";
 import { PublicNav } from "@/components/PublicNav";
 import { getPublishedPrograms } from "@/lib/programs";
 
+export const dynamic = "force-dynamic";
+
 export default async function ProgramsPage() {
   const programs = await getPublishedPrograms();
 

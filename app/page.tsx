@@ -3,6 +3,8 @@ import { ProgramCard } from "@/components/ProgramCard";
 import { PublicNav } from "@/components/PublicNav";
 import { getPublishedPrograms } from "@/lib/programs";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const programs = await getPublishedPrograms();
   const latest = programs.slice(0, 6);
