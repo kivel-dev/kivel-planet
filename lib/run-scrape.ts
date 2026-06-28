@@ -16,7 +16,10 @@ export async function runScrapeForSite(siteId: string) {
 
   try {
     const scrapedPrograms = await scrapeSite(site as Site);
-    const sourceUrls = scrapedPrograms.map((program) => program.sourceUrl);
+    const uniquePrograms = Array.from(
+      new Map(scrapedPrograms.map((program) => [program.sourceUrl, program])).values()
+    );
+    const sourceUrls = uniquePrograms.map((program) => program.sourceUrl);
     let insertedCount = 0;
     let updatedCount = 0;
 
@@ -32,11 +35,11 @@ export async function runScrapeForSite(siteId: string) {
       }
 
       const existingUrls = new Set((existingRows ?? []).map((row) => row.source_url));
-      insertedCount = scrapedPrograms.filter((program) => !existingUrls.has(program.sourceUrl)).length;
-      updatedCount = scrapedPrograms.length - insertedCount;
+      insertedCount = uniquePrograms.filter((program) => !existingUrls.has(program.sourceUrl)).length;
+      updatedCount = uniquePrograms.length - insertedCount;
     }
 
-    for (const program of scrapedPrograms) {
+    for (const program of uniquePrograms) {
       const { error } = await supabase.from("programs").upsert(
         {
           site_id: site.id,
@@ -57,13 +60,13 @@ export async function runScrapeForSite(siteId: string) {
     await supabase.from("scrape_runs").insert({
       site_id: site.id,
       status: "success",
-      total_count: scrapedPrograms.length,
+      total_count: uniquePrograms.length,
       inserted_count: insertedCount,
       updated_count: updatedCount
     });
 
     return {
-      totalCount: scrapedPrograms.length,
+      totalCount: uniquePrograms.length,
       insertedCount,
       updatedCount
     };

@@ -26,6 +26,31 @@ npm run dev
 
 Supabase SQL Editor에서 `supabase/schema.sql`을 먼저 실행하세요.
 
+## 기존 설정 가져오기
+
+기존 Google Sheet의 기관별 수집 설정을 Supabase `sites` 테이블로 가져옵니다.
+
+```bash
+npm run import:sites
+```
+
+기본적으로 프로젝트 상위 폴더의 `serviceKey.json`을 사용합니다. 다른 경로를 쓰려면 `GOOGLE_SERVICE_KEY_PATH` 환경변수로 지정합니다.
+
+## 수집 실행
+
+로컬 개발 서버를 켠 뒤 전체 기관을 수집합니다.
+
+```bash
+npm run dev
+npm run scrape:sites
+```
+
+앞에서 일부 기관만 테스트하려면 숫자를 붙입니다.
+
+```bash
+npm run scrape:sites -- 10
+```
+
 ## 주요 경로
 
 - `/`: 공개 홈

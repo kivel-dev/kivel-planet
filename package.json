@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "import:sites": "node scripts/import-sites-from-google-sheet.mjs",
+    "scrape:sites": "node scripts/scrape-sites.mjs",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit"
