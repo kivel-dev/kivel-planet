@@ -1,5 +1,5 @@
 import { createServerSupabase, createServiceSupabase } from "@/lib/supabase-server";
-import type { Program, ProgramStatus, Site } from "@/types/database";
+import type { Program, ProgramStatus, ScrapeRun, Site } from "@/types/database";
 
 export async function getPublishedPrograms() {
   const supabase = createServerSupabase();
@@ -44,4 +44,30 @@ export async function getSites() {
   }
 
   return (data ?? []) as Site[];
+}
+
+export async function getLatestFailedScrapeRuns() {
+  const supabase = createServiceSupabase();
+  const { data, error } = await supabase
+    .from("scrape_runs")
+    .select("*, sites(*)")
+    .eq("status", "failed")
+    .order("created_at", { ascending: false })
+    .limit(200);
+
+  if (error) {
+    throw error;
+  }
+
+  const latestBySite = new Map<string, ScrapeRun>();
+
+  for (const run of (data ?? []) as ScrapeRun[]) {
+    if (!run.site_id || latestBySite.has(run.site_id)) {
+      continue;
+    }
+
+    latestBySite.set(run.site_id, run);
+  }
+
+  return Array.from(latestBySite.values());
 }

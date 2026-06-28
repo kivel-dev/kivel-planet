@@ -42,4 +42,37 @@ export async function scrapeSiteNow(formData: FormData) {
   await runScrapeForSite(siteId);
   revalidatePath("/admin/programs");
   revalidatePath("/admin/sites");
+  revalidatePath("/admin/failures");
+}
+
+export async function updateSiteSettings(formData: FormData) {
+  const siteId = String(formData.get("site_id") ?? "");
+
+  if (!siteId) {
+    throw new Error("기관 정보가 없습니다.");
+  }
+
+  const supabase = createServiceSupabase();
+  const { error } = await supabase
+    .from("sites")
+    .update({
+      name: String(formData.get("name") ?? ""),
+      homepage_url: String(formData.get("homepage_url") ?? ""),
+      region: String(formData.get("region") ?? ""),
+      center_type: String(formData.get("center_type") ?? ""),
+      selector_depth1: String(formData.get("selector_depth1") ?? ""),
+      selector_depth2: String(formData.get("selector_depth2") ?? ""),
+      href_index: Number(formData.get("href_index") ?? -1),
+      include_keywords: keywords(formData.get("include_keywords")),
+      exclude_keywords: keywords(formData.get("exclude_keywords")),
+      is_active: formData.get("is_active") === "on"
+    })
+    .eq("id", siteId);
+
+  if (error) {
+    throw error;
+  }
+
+  revalidatePath("/admin/sites");
+  revalidatePath("/admin/failures");
 }

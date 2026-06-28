@@ -291,6 +291,54 @@ button.secondary,
   gap: 6px;
 }
 
+.cell-note {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  margin: 6px 0 0;
+}
+
+.failure-table td {
+  min-width: 120px;
+}
+
+.inline-edit-form {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(140px, 1fr));
+  min-width: 620px;
+}
+
+.inline-edit-form label {
+  color: var(--muted);
+  display: grid;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.inline-edit-form input {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.inline-edit-form .wide-field {
+  grid-column: span 3;
+}
+
+.inline-edit-form .check-field {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.inline-edit-form .check-field input {
+  min-height: auto;
+}
+
 @media (max-width: 720px) {
   .page {
     padding: 18px;

@@ -34,3 +34,17 @@ export type Program = {
   updated_at: string;
   sites?: Pick<Site, "name" | "homepage_url"> | null;
 };
+
+export type ScrapeRunStatus = "success" | "failed";
+
+export type ScrapeRun = {
+  id: string;
+  site_id: string | null;
+  status: ScrapeRunStatus;
+  total_count: number;
+  inserted_count: number;
+  updated_count: number;
+  message: string;
+  created_at: string;
+  sites?: Site | null;
+};
